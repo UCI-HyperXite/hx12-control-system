@@ -1,0 +1,102 @@
+/* Reset */
+*, *::before, *::after { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; padding: 0; overflow: hidden; background: #5d3b73; }
+
+
+.rotTable th{
+  border-bottom: 2px solid black;
+}
+
+
+
+.rotTable td:nth-child(1),.rotTable td:nth-child(2){
+    border-top: 2px solid black;
+    background: #f0f0f0;
+}
+
+.OtherInfoTable{
+    border: 2px transparent;
+}
+.OtherInfoTable th{
+    border-bottom: 2px solid #eadfd6;
+}
+.OtherInfoTable td{
+    border-top: 1.5px solid #eadfd6;
+}
+
+.OtherInfoTable td:nth-child(1){
+  text-align: left;
+  padding-left: 10px;
+}
+
+.OtherInfoTable tr:nth-child(n+3):nth-child(-n+8),
+.OtherInfoTable tr:nth-child(n+10):nth-child(-n+17) {
+    color: rgb(255, 219, 219);
+}
+
+.OtherInfoTable tr:nth-child(n+3):nth-child(-n+8) td:nth-child(1),
+.OtherInfoTable tr:nth-child(n+10):nth-child(-n+17) td:nth-child(1) {
+    padding-left: 25px;
+}
+
+
+th {
+    border-bottom: 1px solid black;
+}
+td {
+    text-align: center;
+}
+
+.TempTable th:nth-child(2),
+.TempTable td:nth-child(2) {
+    border-right: 2px solid black;
+}
+
+
+.TempTable th {
+    border-bottom: 4px double black;
+}
+
+.TempTable tbody tr:not(:first-child) td {
+    border-top: 1px solid black;
+}
+.TempTable {
+    border-collapse: separate;
+    border-spacing: 0.2vw 0;
+    font-size: 1.3vw;  /* was 16px */
+    font-weight: bold;
+    line-height: 2.5;
+    text-align: center;
+}
+
+
+.INA219Table {
+    border-collapse: separate;
+    border-spacing: 0.48vw 0;
+}
+
+.INA219Table th {
+    border-bottom: 4px double black;
+}
+
+.INA219Table tbody tr:not(:first-child) td{
+    border-top: 1px solid black;
+}
+
+.INA219Table td:nth-child(2){
+    background-color: #f0f0f0;
+}
+
+.INA219Table tr:nth-child(4) td{
+    border-bottom: 1px solid black;
+}
+
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.15; }
+}
+
+.dot-blink {
+  animation: blink 0.8s ease-in-out infinite;
+}
