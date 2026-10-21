@@ -23,7 +23,6 @@
 /* USER CODE BEGIN Includes */
 #include "MPU6050.h"
 #include <stdio.h>
-
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -85,7 +84,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -99,6 +98,7 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
+
   /* USER CODE END 2 */
 
   /* Initialize leds */
@@ -123,21 +123,18 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   MPU6050_Initialization();
-  
+
   while (1)
   {
-    MPU6050_ProcessData(&MPU6050);
+	  MPU6050_ProcessData(&MPU6050);
 
-    printf("Accel X: %.2f, Y: %.2f, Z: %.2f g\r\n",
-           MPU6050.acc_x, MPU6050.acc_y, MPU6050.acc_z);
+	  printf("Accel X: %.2f, Y: %.2f, Z: %.2f g\r\n", MPU6050.acc_x, MPU6050.acc_y, MPU6050.acc_z);
 
-    printf("Gyro X: %.2f, Y: %.2f, Z: %.2f deg/s\r\n",
-           MPU6050.gyro_x, MPU6050.gyro_y, MPU6050.gyro_z);
+	  printf("Gyro X: %.2f, Y: %.2f, Z: %.2f deg/s\r\n", MPU6050.gyro_x, MPU6050.gyro_y, MPU6050.gyro_z);
 
-    printf("Temperature: %.2f C\r\n", MPU6050.temperature);
+	  printf("Temperature: %.2f C\r\n", MPU6050.temperature);
 
-    HAL_Delay(100);
-
+	  HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
