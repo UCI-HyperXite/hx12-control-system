@@ -122,7 +122,7 @@ int main(void)
 
     /* USER CODE END WHILE */
     // HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);   /* LD1 green  */
-    // HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_1);   /* LD2 yellow */
+    HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_1);   /* LD2 yellow */
     HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);  /* LD3 red    */
     HAL_Delay(500);
     /* USER CODE BEGIN 3 */
