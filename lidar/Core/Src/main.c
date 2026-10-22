@@ -21,17 +21,20 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "lidar.h"
+//#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+//int Get_distance();
+//void configuration_set(int);
 
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+//#define LIDAR_ADD 0x62<<1  // i2c slave address of lidar lite
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -43,14 +46,20 @@
 
 COM_InitTypeDef BspCOMInit;
 
-/* USER CODE BEGIN PV */
+I2C_HandleTypeDef hi2c1;
 
+/* USER CODE BEGIN PV */
+uint32_t m_distance,object_distance;
+uint8_t cmd[1];
+uint8_t data[2]={10};
+char str[100];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MPU_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -68,6 +77,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+   //configuration_set(4);  // initialize configurations for LIDAR
 
   /* USER CODE END 1 */
 
@@ -92,6 +102,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -117,15 +128,31 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  lidar_init(&hi2c1);
+  lidar_config(3);
   while (1)
   {
 
     /* USER CODE END WHILE */
+
+
+    /* USER CODE BEGIN 3 */
+
+	 // HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
+	  //HAL_Delay(500);
+
     // HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);   /* LD1 green  */
     HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_1);   /* LD2 yellow */
     HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);  /* LD3 red    */
-    HAL_Delay(500);
-    /* USER CODE BEGIN 3 */
+ 
+
+
+	  object_distance = retrieve_lidar_distance();
+	  printf("Distance: %lu cm\r\n", object_distance);
+	  HAL_Delay(100);
+
+
+
   }
   /* USER CODE END 3 */
 }
@@ -181,6 +208,54 @@ void SystemClock_Config(void)
 }
 
 /**
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
+  /* USER CODE BEGIN I2C1_Init 0 */
+
+  /* USER CODE END I2C1_Init 0 */
+
+  /* USER CODE BEGIN I2C1_Init 1 */
+
+  /* USER CODE END I2C1_Init 1 */
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.Timing = 0x10707DBC;
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Analogue filter
+  */
+  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Digital filter
+  */
+  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C1_Init 2 */
+
+  /* USER CODE END I2C1_Init 2 */
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -194,6 +269,7 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
@@ -201,6 +277,94 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+/*
+void configuration_set(int configur)
+{
+    // configuration setting for lidar
+    cmd[0] = 0x04;
+    HAL_I2C_Mem_Write(&hi2c1,LIDAR_ADD ,0x00,1,cmd,1,0x100);
+    switch(configur)
+    {
+    case 0:
+        //default mode , balance mode
+        cmd[0]=0x80;
+        HAL_I2C_Mem_Write(&hi2c1,LIDAR_ADD ,0x02,1,cmd,1,0x1000);
+        cmd[0]=0x04;
+        HAL_I2C_Mem_Write(&hi2c1,LIDAR_ADD ,0x04,1,cmd,1,0x1000);
+        cmd[0]=0x00;
+        HAL_I2C_Mem_Write(&hi2c1,LIDAR_ADD ,0x1c,1,cmd,1,0x1000);
+        break;
+
+
+    case 1:
+        //short range, high speed
+        cmd[0]=0x1d;
+        HAL_I2C_Mem_Write(&hi2c1,LIDAR_ADD ,0x02,1,cmd,1,0x1000);
+        cmd[0]=0x08;
+        HAL_I2C_Mem_Write(&hi2c1,LIDAR_ADD ,0x04,1,cmd,1,0x1000);
+        cmd[0]=0x00;
+        HAL_I2C_Mem_Write(&hi2c1,LIDAR_ADD ,0x1c,1,cmd,1,0x1000);
+        break;
+
+
+    case 2:
+        //default range, higher speed short range
+        cmd[0]=0x80;
+        HAL_I2C_Mem_Write(&hi2c1,LIDAR_ADD ,0x02,1,cmd,1,0x1000);
+        cmd[0]=0x08;
+        HAL_I2C_Mem_Write(&hi2c1,LIDAR_ADD ,0x04,1,cmd,1,0x1000);
+        cmd[0]=0x00;
+        HAL_I2C_Mem_Write(&hi2c1,LIDAR_ADD ,0x1c,1,cmd,1,0x1000);
+        break;
+
+
+
+
+    case 3:
+        //maximum Range
+        cmd[0]=0xff;
+        HAL_I2C_Mem_Write(&hi2c1,LIDAR_ADD ,0x02,1,cmd,1,0x1000);
+        cmd[0]=0x08;
+        HAL_I2C_Mem_Write(&hi2c1,LIDAR_ADD ,0x04,1,cmd,1,0x1000);
+        cmd[0]=0x00;
+        HAL_I2C_Mem_Write(&hi2c1,LIDAR_ADD ,0x1c,1,cmd,1,0x1000);
+        break;
+
+
+    case 4:
+        //high sensitivity detection, high  measurement
+        cmd[0]=0x80;
+        HAL_I2C_Mem_Write(&hi2c1,LIDAR_ADD ,0x02,1,cmd,1,0x1000);
+        cmd[0]=0x08;
+        HAL_I2C_Mem_Write(&hi2c1,LIDAR_ADD ,0x04,1,cmd,1,0x1000);
+        cmd[0]=0x80;
+        HAL_I2C_Mem_Write(&hi2c1,LIDAR_ADD ,0x1c,1,cmd,1,0x1000);
+        break;
+
+
+    case 5:
+        //low sensitivity detection , low  measurement
+        cmd[0]=0x80;
+        HAL_I2C_Mem_Write(&hi2c1,LIDAR_ADD ,0x02,1,cmd,1,0x1000);
+        cmd[0]=0x08;
+        HAL_I2C_Mem_Write(&hi2c1,LIDAR_ADD ,0x04,1,cmd,1,0x1000);
+        cmd[0]=0xb0;
+        HAL_I2C_Mem_Write(&hi2c1,LIDAR_ADD ,0x1c,1,cmd,1,0x1000);
+        break;
+    }
+}
+
+int Get_distance()
+{
+    cmd[0]=0x04;
+    HAL_I2C_Mem_Write(&hi2c1,LIDAR_ADD ,0x00,1,cmd,1,100);
+    cmd[0]=0x8f;
+    HAL_I2C_Master_Transmit(&hi2c1,LIDAR_ADD,cmd,1,100);
+    HAL_I2C_Master_Receive(&hi2c1,LIDAR_ADD,data,2,100);
+    m_distance = (data[0]<<8)|(data[1]);
+    return m_distance ;
+}
+*/
 
 /* USER CODE END 4 */
 
