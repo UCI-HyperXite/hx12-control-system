@@ -56,3 +56,30 @@ debug/
 Release/
 release
 *.launch
+mx.scratch
+
+# ARM build output
+*.cyclo
+*.elf
+*.map
+*.list
+
+# CMake builds
+build/
+cmake-build-*/
+compile_commands.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors 
+.vscode/
+.idea/
+.clangd
+.cache/
+
+# Node (gui)
+node_modules/
+dist/
+*.log
