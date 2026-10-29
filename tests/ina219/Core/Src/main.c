@@ -67,7 +67,9 @@ static void MX_I2C1_Init(void);
 
 INA219_t ina219;
 
-uint16_t vbus, vshunt, current, config, power;
+uint16_t vbus;
+float vshunt;
+uint16_t current, config, power;
 float batteryLife , miliwattAVG,miliWattTime,totalPowerUsed;
 enum BatteryState state;
 
@@ -93,7 +95,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  unsigned char uart_tx_buff[100];
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -108,6 +110,12 @@ int main(void)
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
+  if (!INA219_Init(&ina219, &hi2c1, INA219_ADDRESS))
+  {
+      Error_Handler();
+  }
+
+  config = INA219_getConfig(&ina219);
   /* USER CODE END 2 */
 
   /* Initialize leds */
@@ -135,7 +143,17 @@ int main(void)
   {
 
     /* USER CODE END WHILE */
+	  vbus = INA219_ReadBusVoltage(&ina219);
+	  vshunt = INA219_ReadShuntVoltage(&ina219);
+	  current = INA219_ReadCurrent(&ina219);
+	  power = INA219_ReadPower(&ina219);
 
+	  printf("Bus Voltage: %u mV\r\n", (unsigned int)vbus);
+	  printf("Shunt Voltage: %.2f mV\r\n", (double)vshunt);
+	  printf("Current: %d mA\r\n", (int)current);
+	  printf("Power: %u mW\r\n", (unsigned int)power);
+
+	  HAL_Delay(500);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
