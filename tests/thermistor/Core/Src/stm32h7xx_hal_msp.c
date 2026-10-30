@@ -95,14 +95,14 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
   /** Initializes the peripherals clock
   */
     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_ADC;
-    PeriphClkInitStruct.PLL2.PLL2M = 32;
-    PeriphClkInitStruct.PLL2.PLL2N = 129;
+    PeriphClkInitStruct.PLL2.PLL2M = 4;
+    PeriphClkInitStruct.PLL2.PLL2N = 9;
     PeriphClkInitStruct.PLL2.PLL2P = 2;
     PeriphClkInitStruct.PLL2.PLL2Q = 2;
     PeriphClkInitStruct.PLL2.PLL2R = 2;
-    PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_1;
-    PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
-    PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
+    PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_3;
+    PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOMEDIUM;
+    PeriphClkInitStruct.PLL2.PLL2FRACN = 3072.0;
     PeriphClkInitStruct.AdcClockSelection = RCC_ADCCLKSOURCE_PLL2;
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
     {
@@ -112,14 +112,33 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
     /* Peripheral clock enable */
     __HAL_RCC_ADC12_CLK_ENABLE();
 
+    __HAL_RCC_GPIOC_CLK_ENABLE();
     __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOF_CLK_ENABLE();
     /**ADC1 GPIO Configuration
+    PC0     ------> ADC1_INP10
+    PC1     ------> ADC1_INP11
     PA0     ------> ADC1_INP16
+    PA3     ------> ADC1_INP15
+    PA4     ------> ADC1_INP18
+    PA6     ------> ADC1_INP3
+    PF11     ------> ADC1_INP2
+    PF12     ------> ADC1_INP6
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_0;
+    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_6;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
     /* ADC1 DMA Init */
     /* ADC1 Init */
@@ -141,7 +160,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
     __HAL_LINKDMA(hadc,DMA_Handle,hdma_adc1);
 
     /* ADC1 interrupt Init */
-    HAL_NVIC_SetPriority(ADC_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(ADC_IRQn, 1, 0);
     HAL_NVIC_EnableIRQ(ADC_IRQn);
     /* USER CODE BEGIN ADC1_MspInit 1 */
 
@@ -168,9 +187,20 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
     __HAL_RCC_ADC12_CLK_DISABLE();
 
     /**ADC1 GPIO Configuration
+    PC0     ------> ADC1_INP10
+    PC1     ------> ADC1_INP11
     PA0     ------> ADC1_INP16
+    PA3     ------> ADC1_INP15
+    PA4     ------> ADC1_INP18
+    PA6     ------> ADC1_INP3
+    PF11     ------> ADC1_INP2
+    PF12     ------> ADC1_INP6
     */
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_0);
+    HAL_GPIO_DeInit(GPIOC, GPIO_PIN_0|GPIO_PIN_1);
+
+    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_0|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_6);
+
+    HAL_GPIO_DeInit(GPIOF, GPIO_PIN_11|GPIO_PIN_12);
 
     /* ADC1 DMA DeInit */
     HAL_DMA_DeInit(hadc->DMA_Handle);

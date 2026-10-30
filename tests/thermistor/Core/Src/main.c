@@ -21,7 +21,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
+#include <stdlib.h>
+#include "thermistor.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -31,7 +33,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define NUM_THERM 8
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -46,7 +48,8 @@ ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
 
 /* USER CODE BEGIN PV */
-
+__attribute__((section(".dma_buffer"), aligned(32)))
+uint16_t adcBuf[16];   /* 8 used, padded to 32 bytes */
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -99,7 +102,14 @@ int main(void)
   MX_DMA_Init();
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
-
+  if (HAL_ADCEx_Calibration_Start(&hadc1, ADC_CALIB_OFFSET, ADC_SINGLE_ENDED) != HAL_OK)
+    {
+      Error_Handler();
+    }
+    if (HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adcBuf, NUM_THERM) != HAL_OK)
+    {
+      Error_Handler();
+    }
   /* USER CODE END 2 */
 
   /* Initialize leds */
@@ -123,12 +133,29 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  BSP_COM_SelectLogPort(COM1);
+  printf("8 thermistor read started\r\n");
   while (1)
   {
 
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  SCB_InvalidateDCache_by_Addr((uint32_t*)adcBuf, sizeof(adcBuf));
+
+	  for (int i = 0; i < NUM_THERM; i++)
+	  {
+		float   tempC = ntc_convertToC(adcBuf[i]);
+		int32_t t100  = (int32_t)(tempC * 100.0f);
+		printf("T%d:%s%ld.%02ld  ", i + 1,
+			   (t100 < 0) ? "-" : "",
+			   (long)abs(t100 / 100),
+			   (long)abs(t100 % 100));
+	  }
+	  printf("\r\n");
+
+	  BSP_LED_Toggle(LED_GREEN);
+	  HAL_Delay(500);
   }
   /* USER CODE END 3 */
 }
@@ -209,17 +236,17 @@ static void MX_ADC1_Init(void)
   /** Common config
   */
   hadc1.Instance = ADC1;
-  hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV4;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV2;
   hadc1.Init.Resolution = ADC_RESOLUTION_16B;
-  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  hadc1.Init.ScanConvMode = ADC_SCAN_ENABLE;
+  hadc1.Init.EOCSelection = ADC_EOC_SEQ_CONV;
   hadc1.Init.LowPowerAutoWait = DISABLE;
   hadc1.Init.ContinuousConvMode = ENABLE;
-  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.NbrOfConversion = 8;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc1.Init.ConversionDataManagement = ADC_CONVERSIONDATA_DMA_ONESHOT;
+  hadc1.Init.ConversionDataManagement = ADC_CONVERSIONDATA_DMA_CIRCULAR;
   hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
   hadc1.Init.LeftBitShift = ADC_LEFTBITSHIFT_NONE;
   hadc1.Init.OversamplingMode = DISABLE;
@@ -241,11 +268,74 @@ static void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_16;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_810CYCLES_5;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
   sConfig.Offset = 0;
   sConfig.OffsetSignedSaturation = DISABLE;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_15;
+  sConfig.Rank = ADC_REGULAR_RANK_2;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_18;
+  sConfig.Rank = ADC_REGULAR_RANK_3;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_3;
+  sConfig.Rank = ADC_REGULAR_RANK_4;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_10;
+  sConfig.Rank = ADC_REGULAR_RANK_5;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_11;
+  sConfig.Rank = ADC_REGULAR_RANK_6;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_2;
+  sConfig.Rank = ADC_REGULAR_RANK_7;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_6;
+  sConfig.Rank = ADC_REGULAR_RANK_8;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -287,6 +377,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
