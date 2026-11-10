@@ -155,7 +155,7 @@ int main(void)
 	  printf("\r\n");
 
 	  BSP_LED_Toggle(LED_GREEN);
-	  HAL_Delay(500);
+	  HAL_Delay(200);
   }
   /* USER CODE END 3 */
 }
