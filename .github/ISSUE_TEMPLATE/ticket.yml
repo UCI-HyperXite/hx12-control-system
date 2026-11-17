@@ -1,0 +1,21 @@
+name: Change ticket
+description: Propose a change to the main codebase
+title: "[Ticket]: "
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What do you want to change?
+      description: Short description of the change and why.
+    validations:
+      required: true
+  - type: textarea
+    id: files
+    attributes:
+      label: Files you plan to change
+      description: One per line, e.g. src/api/users.js
+      placeholder: |
+        src/...
+        tests/...
+    validations:
+      required: false
