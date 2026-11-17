@@ -1,0 +1,21 @@
+name: Require ticket
+on:
+  pull_request:
+    branches: [master]
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  check-ticket:
+    runs-on: ubuntu-latest
+    steps:
+      - name: PR must reference a ticket
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if printf '%s\n%s' "$TITLE" "$BODY" | grep -qE '#[0-9]+'; then
+            echo "Ticket found ✅"
+          else
+            echo "::error::Add a ticket number (e.g. Closes #12) to the PR title or description."
+            exit 1
+          fi
